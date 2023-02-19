@@ -1,0 +1,11 @@
+# ESP32 Test
+
+## Инструментарий
+*PlatformIO* + *VS Code*
+
+## Board
+- ESP32_DevKitc_V4
+
+## Полезная информация
+Настройка VS Code + PlatformIO
+https://randomnerdtutorials.com/vs-code-platformio-ide-esp32-esp8266-arduino/
