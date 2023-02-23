@@ -23,6 +23,8 @@ CRGB leds[NUM_LEDS];
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
+bool flagStartEff = false;
+
 static void rainbowWithGlitter(void);
 static void bpm(void);
 static void rainbow(void);
@@ -45,6 +47,8 @@ static void rainbow(void)
 {// FastLED's built-in rainbow generator
   const uint8_t deltahue = 3;
   fill_rainbow(leds, NUM_LEDS, gHue, deltahue);
+
+  flagStartEff = true;
 }
 
 static void addGlitter(uint8_t chanceOfGlitter)
@@ -102,12 +106,11 @@ static void rainbowWithGlitter(void)
 
 static void staticRandomColor(void)
 {
-  static uint8_t devider;
-  if (devider == 0)
+  if (flagStartEff == true)
   {
-   fill_solid(leds, NUM_LEDS, CRGB(random8(),random8(),random8()));
+    fill_solid(leds, NUM_LEDS, CHSV(random8(), 255, 255));
+    flagStartEff = false;
   }
-  devider++;
 }
 
 void setup() 
