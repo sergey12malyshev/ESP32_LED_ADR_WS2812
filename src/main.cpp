@@ -172,6 +172,14 @@ static void newMsg(FB_msg& msg)
   Serial.println(msg.text);     // текст
 #endif
 
+  /* Запуск процесса обновления */
+  if (msg.OTA && msg.text == "update") 
+  {
+    bot.sendMessage("Software update...", msg.chatID);
+    delay(500);
+    bot.update();
+  }
+
   if (msg.text == "/test@LedLigthBot")
   {
     bot.sendMessage("Test OK!", msg.chatID);
@@ -239,7 +247,7 @@ void setup()
   bot.attach(newMsg);
 
   bot.setChatID(CHAT_ID);
-  bot.sendMessage("Power On");
+  bot.sendMessage("Я в сети!");
 }
 
 void loop() 
