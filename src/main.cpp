@@ -8,6 +8,7 @@
 #include <FastBot.h>
 #include <pass.h> // Файл содержит логин/пароль WiFi + bot/id токен
 
+#define SOFTWARE_VERSION       "1.0.1"       
 #define DEBUG    false         //Включить отладочные сообщения
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -16,19 +17,17 @@
 #define LED_TYPE           WS2812
 #define COLOR_ORDER        GRB
 #define NUM_LEDS           300
-#define VOLTAGE             5
-#define CURRENT            1900
 
 const uint8_t brightness = 96u;
 const uint8_t framesPerSecond = 120u;
 const uint8_t voltage_v = 5u;
-const uint8_t current_mA = 120u;
+const uint16_t current_mA = 1900u;
 /*
-Команды для телеграмм бота
+Команды для телеграмм бота:
 next - сменить режим
 led_on - включить ленту
 led_off - выключить ленту
-test - тест связи
+get_soft - запросить версию
 help - доступные команды
 hardreset - перезапуск платы
 */
@@ -140,7 +139,7 @@ static void setupFastLed()
   // tell FastLED about the LED strip configuration
   delay(250);
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.setMaxPowerInVoltsAndMilliamps(voltage_v, 1900);
+  FastLED.setMaxPowerInVoltsAndMilliamps(voltage_v, current_mA);
   FastLED.setBrightness(brightness);
 }
 
@@ -160,7 +159,7 @@ static void loopFastLed()
   EVERY_N_SECONDS(10) { nextPattern(); } // change patterns periodically
 }
 
-// обработчик сообщений telegramm
+// обработчик сообщений telegram
 static void newMsg(FB_msg& msg) 
 {
 #if DEBUG  
@@ -179,10 +178,10 @@ static void newMsg(FB_msg& msg)
     delay(500);
     bot.update();
   }
-
-  if (msg.text == "/test@LedLigthBot")
+  else if (msg.text == "/get_soft@LedLigthBot")
   {
-    bot.sendMessage("Test OK!", msg.chatID);
+    bot.sendMessage("Software version: ", msg.chatID);
+    bot.sendMessage(SOFTWARE_VERSION, msg.chatID);
   } 
   else if (msg.text == "/led_on@LedLigthBot") 
   {
@@ -207,7 +206,7 @@ static void newMsg(FB_msg& msg)
     next - сменить режим\r\n\
     led_on - включить ленту\r\n\
     led_off - выключить ленту\r\n\
-    test - тест связи\r\n\
+    get_soft - запросить версию\r\n\
     hardreset - перезапуск платы\r\n\
     help - доступные команды", msg.chatID);
   }
