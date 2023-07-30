@@ -18,7 +18,7 @@
 #define COLOR_ORDER        GRB
 #define NUM_LEDS           300
 
-#define UPDATE_PERIOD_BOT  5000
+#define UPDATE_PERIOD_BOT  6500
 
 const uint8_t brightness = 96u;
 const uint8_t framesPerSecond = 120u;
