@@ -8,7 +8,7 @@
 #include <FastBot.h>
 #include <pass.h> // Файл содержит логин/пароль WiFi + bot/id токен
 
-#define SOFTWARE_VERSION       "1.0.1"       
+#define SOFTWARE_VERSION       "1.0.2"       
 #define DEBUG    false         //Включить отладочные сообщения
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -17,6 +17,8 @@
 #define LED_TYPE           WS2812
 #define COLOR_ORDER        GRB
 #define NUM_LEDS           300
+
+#define UPDATE_PERIOD_BOT  5000
 
 const uint8_t brightness = 96u;
 const uint8_t framesPerSecond = 120u;
@@ -74,7 +76,7 @@ static void rainbow(void)
 
 static void addGlitter(uint8_t chanceOfGlitter)
 {
-  if( random8() < chanceOfGlitter) 
+  if(random8() < chanceOfGlitter) 
   {
     leds[ random16(NUM_LEDS) ] += CRGB::White;
   }
@@ -83,9 +85,9 @@ static void addGlitter(uint8_t chanceOfGlitter)
 static void confetti(void)
 {
   // random colored speckles that blink in and fade smoothly
-  fadeToBlackBy( leds, NUM_LEDS, 10);
+  fadeToBlackBy(leds, NUM_LEDS, 10);
   int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV( gHue + random8(64), 200, 255);
+  leds[pos] += CHSV(gHue + random8(64), 200, 255);
 }
 
 static void sinelon(void)
@@ -103,7 +105,7 @@ static void bpm(void)
   CRGBPalette16 palette = PartyColors_p;
   uint8_t beat = beatsin8(BeatsPerMinute, 64, 255);
 
-  for( int i = 0; i < NUM_LEDS; i++) { //9948
+  for(int i = 0; i < NUM_LEDS; i++) { //9948
     leds[i] = ColorFromPalette(palette, gHue+(i*2), beat-gHue+(i*10));
   }
 }
@@ -111,9 +113,10 @@ static void bpm(void)
 static void juggle(void) 
 {
   // eight colored dots, weaving in and out of sync with each other
-  fadeToBlackBy( leds, NUM_LEDS, 20);
+  fadeToBlackBy(leds, NUM_LEDS, 20);
   byte dothue = 0;
-  for( int i = 0; i < 8; i++) {
+  for(int i = 0; i < 8; i++) 
+  {
     leds[beatsin16( i+7, 0, NUM_LEDS-1 )] |= CHSV(dothue, 200, 255);
     dothue += 32;
   }
@@ -127,17 +130,16 @@ static void rainbowWithGlitter(void)
 
 static void staticRandomColor(void)
 {
-  if (flagStartEff == true)
+  if (flagStartEff)
   {
     fill_solid(leds, NUM_LEDS, CHSV(random8(), 255, 255));
     flagStartEff = false;
   }
 }
 
-static void setupFastLed() 
+static void setupFastLedLib() 
 {
   // tell FastLED about the LED strip configuration
-  delay(250);
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   FastLED.setMaxPowerInVoltsAndMilliamps(voltage_v, current_mA);
   FastLED.setBrightness(brightness);
@@ -150,13 +152,19 @@ static void ledProcess()
   FastLED.delay(1000/framesPerSecond);
 
   //do some periodic updates
-  EVERY_N_MILLISECONDS(20) { gHue++; } // slowly cycle the "base color" through the rainbow
+  EVERY_N_MILLISECONDS(25) // slowly cycle the "base color" through the rainbow
+  { 
+    gHue++; 
+  } 
 }
 
 static void loopFastLed()
 {
   ledProcess();
-  EVERY_N_SECONDS(10) { nextPattern(); } // change patterns periodically
+  EVERY_N_SECONDS(12) // change patterns periodically
+  {
+    nextPattern(); 
+  } 
 }
 
 // обработчик сообщений telegram
@@ -171,8 +179,8 @@ static void newMsg(FB_msg& msg)
   Serial.println(msg.text);     // текст
 #endif
 
-  /* Запуск процесса обновления */
-  if (msg.OTA && msg.text == "update") 
+  /* Запуск процесса обновления если пришло сообщение update от чата с правильным id */
+  if (msg.OTA && msg.text == "update" && msg.chatID == CHAT_ID) 
   {
     bot.sendMessage("Software update...", msg.chatID);
     delay(500);
@@ -225,7 +233,7 @@ static void newMsg(FB_msg& msg)
 
 static void connectWiFi() 
 {
-  delay(2000);
+  delay(1000);
   Serial.begin(115200);
   Serial.println();
   WiFi.begin(WIFI_SSID, WIFI_PASS);
@@ -233,16 +241,21 @@ static void connectWiFi()
   {
     delay(500);
     Serial.print(".");
-    if (millis() > 15000) ESP.restart();
+    if (millis() > 15000)
+    {
+      ESP.restart();
+    } 
   }
   Serial.println("Connected");
 }
 
 void setup() 
 {
-  setupFastLed();
+  delay(250);
+  setupFastLedLib();
 
   connectWiFi();
+  bot.setPeriod(UPDATE_PERIOD_BOT);
   bot.attach(newMsg);
 
   bot.setChatID(CHAT_ID);
