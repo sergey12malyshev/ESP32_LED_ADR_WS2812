@@ -55,9 +55,33 @@ static void staticRandomColor(void);
 typedef void (*SimplePatternList[])();
 SimplePatternList gPatterns = { rainbow, rainbowWithGlitter, confetti, sinelon, juggle, bpm, staticRandomColor};
 
-static void disableLEDs(void) // Выключение
+static inline void disableLEDs(void) // Выключение
 {
   fill_solid(leds, NUM_LEDS, CRGB::Black);
+}
+
+static inline void AquaShowColor(void) //Enable
+{
+  fill_solid(leds, NUM_LEDS, CRGB::Aqua);
+  FastLED.show();
+}
+
+static inline void GreenShowColor(void) // Wi-Fi good
+{
+  fill_solid(leds, NUM_LEDS, CRGB::Green);
+  FastLED.show();
+}
+
+static inline void RedShowColor(void) // Wi-Fi Error
+{
+  fill_solid(leds, NUM_LEDS, CRGB::Red);
+  FastLED.show();
+}
+
+static inline void PurpleShowColor(void) //Upload
+{
+  fill_solid(leds, NUM_LEDS, CRGB::Purple);
+  FastLED.show();
 }
 
 static void nextPattern(void)
@@ -183,6 +207,7 @@ static void newMsg(FB_msg& msg)
   if (msg.OTA && msg.text == "update" && msg.chatID == CHAT_ID) 
   {
     bot.sendMessage("Software update...", msg.chatID);
+    PurpleShowColor();
     delay(500);
     bot.update();
   }
@@ -233,26 +258,30 @@ static void newMsg(FB_msg& msg)
 
 static void connectWiFi() 
 {
-  delay(1000);
+  delay(1100);
   Serial.begin(115200);
   Serial.println();
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) 
   {
-    delay(500);
+    delay(150);
     Serial.print(".");
     if (millis() > 15000)
     {
+      RedShowColor();
+      delay(150);
       ESP.restart();
     } 
   }
+  GreenShowColor();
   Serial.println("Connected");
 }
 
 void setup() 
 {
-  delay(250);
+  delay(50);
   setupFastLedLib();
+  AquaShowColor();
 
   connectWiFi();
   bot.setPeriod(UPDATE_PERIOD_BOT);
