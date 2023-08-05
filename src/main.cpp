@@ -8,6 +8,11 @@
 #include <FastBot.h>
 #include <pass.h> // Файл содержит логин/пароль WiFi + bot/id токен
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/timers.h"
+#include "freertos/event_groups.h"
+
 #define SOFTWARE_VERSION       "1.0.2"       
 #define DEBUG    false         //Включить отладочные сообщения
 
@@ -50,6 +55,8 @@ static void confetti(void);
 static void sinelon(void);
 static void juggle(void);
 static void staticRandomColor(void);
+void FastLed_Task(void *pvParameters);
+void Bot_Task(void *pvParameters);
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
@@ -149,7 +156,7 @@ static void ledProcess()
 {
   gPatterns[gCurrentPatternNumber]();
   FastLED.show();
-  FastLED.delay(1000/framesPerSecond);
+  //FastLED.delay(1000/framesPerSecond);
 
   //do some periodic updates
   EVERY_N_MILLISECONDS(25) // slowly cycle the "base color" through the rainbow
@@ -255,26 +262,54 @@ void setup()
   setupFastLedLib();
 
   connectWiFi();
-  bot.setPeriod(UPDATE_PERIOD_BOT);
+  //bot.setPeriod(UPDATE_PERIOD_BOT);
   bot.attach(newMsg);
 
   bot.setChatID(CHAT_ID);
   bot.sendMessage("Я в сети!");
+
+  xTaskCreatePinnedToCore(FastLed_Task, "FastLed_Task", 50000, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(Bot_Task, "Bot_Task", 50000, NULL, 1, NULL, 1);
 }
 
 void loop() 
 {
-  bot.tick();
+  
+}
 
-  switch (mainModes)
+void FastLed_Task(void *pvParameters)
+{
+  (void)pvParameters;
+
+  for (;;) 
   {
-    case WORK:
-      loopFastLed();
-      break;
-    case PATTERN:
-      ledProcess();
-      break;
-    default:
-      break;
+    switch (mainModes)
+    {
+      case WORK:
+        loopFastLed();
+        break;
+      case PATTERN:
+        ledProcess();
+        break;
+      default:
+        break;
+    }
+    vTaskDelay(500/framesPerSecond);
   }
+
+  vTaskDelete(NULL);
+}
+
+void Bot_Task(void *pvParameters)
+{
+  (void)pvParameters;
+
+  for (;;) 
+  {
+    bot.tickManual();   
+
+    vTaskDelay(UPDATE_PERIOD_BOT);
+  }
+
+  vTaskDelete(NULL);
 }
