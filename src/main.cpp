@@ -6,10 +6,14 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include <FastBot.h>
-#include <pass.h> // Файл содержит логин/пароль WiFi + bot/id токен
+#include <pass.h>   //The file contains WiFi login/password + bot token/id
 
-#define SOFTWARE_VERSION       "1.0.2"       
-#define DEBUG    false         //Включить отладочные сообщения
+
+#define SOFTWARE_VERSION       "1.0.3"       
+#define DEBUG    false         //Enable debug messages
+
+#define RUS      true         //Enable english messages
+#define EN       false        //Enable russian messages
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
@@ -24,15 +28,7 @@ const uint8_t brightness = 96u;
 const uint8_t framesPerSecond = 120u;
 const uint8_t voltage_v = 5u;
 const uint16_t current_mA = 1900u;
-/*
-Команды для телеграмм бота:
-next - сменить режим
-led_on - включить ленту
-led_off - выключить ленту
-get_soft - запросить версию
-help - доступные команды
-hardreset - перезапуск платы
-*/
+
 typedef enum {NOWORK = 0, WORK, PATTERN} modes;
 modes mainModes = WORK;
 FastBot bot(BOT_TOKEN);
@@ -191,7 +187,7 @@ static void loopFastLed()
   } 
 }
 
-// обработчик сообщений telegram
+// telegram massage handler
 static void newMsg(FB_msg& msg) 
 {
 #if DEBUG  
@@ -203,7 +199,7 @@ static void newMsg(FB_msg& msg)
   Serial.println(msg.text);     // текст
 #endif
 
-  /* Запуск процесса обновления если пришло сообщение update от чата с правильным id */
+/* Start the update process if an update message has arrived from the chat with the correct id */
   if (msg.OTA && msg.text == "update" && msg.chatID == CHAT_ID) 
   {
     bot.sendMessage("Software update...", msg.chatID);
@@ -215,6 +211,9 @@ static void newMsg(FB_msg& msg)
   {
     bot.sendMessage("Software version: ", msg.chatID);
     bot.sendMessage(SOFTWARE_VERSION, msg.chatID);
+    bot.sendMessage("\r\n");
+    bot.sendMessage(__DATE__, msg.chatID);
+    bot.sendMessage(__TIME__, msg.chatID);
   } 
   else if (msg.text == "/led_on@LedLigthBot") 
   {
@@ -235,24 +234,47 @@ static void newMsg(FB_msg& msg)
   }
   else if (msg.text == "/help@LedLigthBot")
   {
+#if RUS
     bot.sendMessage("Я умею:\r\n\
     next - сменить режим\r\n\
     led_on - включить ленту\r\n\
     led_off - выключить ленту\r\n\
     get_soft - запросить версию\r\n\
     hardreset - перезапуск платы\r\n\
+    update + .bin - обновить ПО\r\n\
     help - доступные команды", msg.chatID);
+#elif EN
+    bot.sendMessage("I can:\r\n\
+    next - change the mode\r\n\
+    led_on - enable the feed\r\n\
+    led_off - turn off the feed\r\n\
+    get_soft - request version\r\n\
+    hard reset - restarting the board\r\n\
+    update + .bin - update software\r\n\
+    help - available commands", msg.chatID);
+#else
+    #error "No language selected"
+#endif
+
   }
   else if (msg.text == "/hardreset@LedLigthBot")
   {
-    bot.sendMessage("ПЕРЕЗАГРУЖАЮСЬ...", msg.chatID);                          
+#if RUS
+    bot.sendMessage("ПЕРЕЗАГРУЖАЮСЬ...", msg.chatID);  
+#elif EN
+    bot.sendMessage("REBOOTING...", msg.chatID);  
+#endif                        
     delay(1000);                                                               
     bot.tickManual();
     ESP.restart();                                                              
   }
   else
   {
-    bot.sendMessage("я не знаю такой команды...", msg.chatID);   
+#if RUS
+    bot.sendMessage("я не знаю такой команды...", msg.chatID);  
+#elif EN
+    bot.sendMessage("I do not know such a command...", msg.chatID);  
+#endif   
   }
 }
 
@@ -288,7 +310,12 @@ void setup()
   bot.attach(newMsg);
 
   bot.setChatID(CHAT_ID);
+
+#if RUS
   bot.sendMessage("Я в сети!");
+#elif EN
+  bot.sendMessage("I'm online!");
+#endif
 }
 
 void loop() 
