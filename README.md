@@ -7,18 +7,17 @@ Based on FastBot and FastLed libraries
 
 Основана на библиотеках FastBot и FastLed
 
-## Инструментарий
-*PlatformIO* + *VS Code*
+## Tools (Инструментарий)
+*PlatformIO (Core 6.1.11·Home 3.4.4)* + *VS Code*
 
-## Подключение к сети WI-FI
-Создать файл *pass.h* и добавить в проект:
+## Connect to WI-FI
+Create a pass.h file and add to the project:
 ```
  #define WIFI_SSID "XXXX"
  #define WIFI_PASS "XXXXXXXXX"
  #define BOT_TOKEN "XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
  #define CHAT_ID  "XXXXXXXXXXXXXXX"
 ```
-
 ## Board
 - ESP32_DevKitc_V4
 - WS2812 address led (5 m, 5 V, 60 LED/m WS2812B60)
@@ -28,7 +27,12 @@ Based on FastBot and FastLed libraries
 
 PinOut: https://www.electronshik.ru/news/show/12935?from=terraelectronica
 
-## Полезная информация
+## Management commands
+<img src="https://github.com/sergey12malyshev/ESP32_LED_ADR_WS2812/blob/master/image/screen.jpg" width=20% height=20%>
+
+Для удалённого обновления ПО скинуть в чат команду update с прошивкой в формате .bin
+
+## Helpful information (Полезная информация)
 Исходник FastLed: https://github.com/FastLED/FastLED/blob/master/examples/DemoReel100/DemoReel100.ino
 
 Библиотека FastBot: https://kit.alexgyver.ru/tutorials/fastbot/
